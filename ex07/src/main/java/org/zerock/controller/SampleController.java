@@ -44,4 +44,9 @@ public class SampleController {
 	public String home() {
 		return "home";
 	}
+	
+	@GetMapping("/homee")
+	public String homee() {
+		return "homee";
+	}
 }
