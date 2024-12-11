@@ -1,44 +1,23 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-</div>
-<!-- /#page-wrapper -->
-
-</div>
-<!-- /#wrapper -->
-
-<!-- jQuery -->
-<!-- <script src="/resources/vendor/jquery/jquery.min.js"></script> -->
-
-<!-- Bootstrap Core JavaScript -->
-<script src="/resources/vendor/bootstrap/js/bootstrap.min.js"></script>
-
-<!-- Metis Menu Plugin JavaScript -->
-<script src="/resources/vendor/metisMenu/metisMenu.min.js"></script>
-
-<!-- DataTables JavaScript -->
-<script src="/resources/vendor/datatables/js/jquery.dataTables.min.js"></script>
-<script
-	src="/resources/vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
-<script
-	src="/resources/vendor/datatables-responsive/dataTables.responsive.js"></script>
-
-<!-- Custom Theme JavaScript -->
-<script src="/resources/dist/js/sb-admin-2.js"></script>
-
-<!-- Page-Level Demo Scripts - Tables - Use for reference -->
-<script>
-	$(document).ready(
-			function() {
-				$('#dataTables-example').DataTable({
-					responsive : true
-				});
-
-				$(".sidebar-nav").attr("class",
-						"sidebar-nav navbar-collapse collapse").attr(
-						"aria-expanded", "false").attr("style", "height:1px");
-			});
-</script>
-
-</body>
-
+            </div> <!-- layoutSidenav_content -->
+        </div> <!-- layoutSidenav -->
+        <footer class="py-4 bg-light mt-auto">
+            <div class="container-fluid px-4">
+                <div class="d-flex align-items-center justify-content-between small">
+                    <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                    <div>
+                        <a href="#">Privacy Policy</a>
+                        &middot;
+                        <a href="#">Terms &amp; Conditions</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="js/scripts.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+        <script src="assets/demo/chart-area-demo.js"></script>
+        <script src="assets/demo/chart-bar-demo.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
+        <script src="js/datatables-simple-demo.js"></script>
+    </body>
 </html>
