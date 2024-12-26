@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.zerock.mapper.SeikyuuMapper">
+
+	<select id="selectSeikyuuByMitsumorishoID" resultType="org.zerock.domain.SeikyuuVO">
+    SELECT 
+        SeikyuuID,
+        MitsumorishoID,
+        JumunshoID,
+        HanbaiID,
+        ShukkaShiziShoukaiID,
+        ShukkaID,
+        SeikyuuBi,
+        Sakuseisha,
+        GokeiGaku,
+        Hinmokumei,
+        Kikaku,
+        Suryou,
+        Zanryou
+    FROM 
+        Seikyuu
+    WHERE 
+        MitsumorishoID = #{mitsumorishoID}
+</select>
+
+<select id="selectAllSeikyuu" resultType="org.zerock.domain.SeikyuuVO">
+    SELECT 
+        SeikyuuID,
+        MitsumorishoID,
+        JumunshoID,
+        HanbaiID,
+        ShukkaShiziShoukaiID,
+        ShukkaID,
+        SeikyuuBi,
+        Sakuseisha,
+        GokeiGaku,
+        Hinmokumei,
+        Kikaku,
+        Suryou,
+        Zanryou
+    FROM 
+        Seikyuu
+</select>
+
+
+</mapper>

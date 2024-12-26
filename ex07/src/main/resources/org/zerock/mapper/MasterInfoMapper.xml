@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.MasterInfoMapper">
+
+	<!-- 프로젝트 목록 -->
+	<select id="getAllProjects"
+		resultType="org.zerock.domain.MasterInfoVO"> 
+		SELECT ProjectID, ProjectMeimei, ProjectCode FROM Project
+	</select>
+	<!-- 창고 목록 / 倉庫リスト -->
+	<select id="getAllSoukos"
+		resultType="org.zerock.domain.MasterInfoVO"> 
+		SELECT SoukoID, Soukomei, SoukoCode FROM Souko </select>
+	<!-- 담당자 목록 / 担当者リスト -->
+	<select id="getAllTantoushas"
+		resultType="org.zerock.domain.MasterInfoVO"> 
+		SELECT TantoushaID, Tantoushamei, TantoushaCode FROM
+		Tantousha </select>
+	<!-- 거래처 목록 / 取引先リスト -->
+	<select id="getAllTorihikisakis"
+		resultType="org.zerock.domain.MasterInfoVO"> 
+		SELECT TorihikisakiID, Torihikisakimei, toriTantousha,
+		TorihikisakiCode, renrakusaki, YuubinBangou, ZYUUSHO FROM Torihikisaki
+	</select>
+	<!-- 통화 목록 / 通貨リスト -->
+	<select id="getAllTsuukas"
+		resultType="org.zerock.domain.MasterInfoVO"> 
+		SELECT tsuukaKoodo, tsuukaMeimei FROM Tsuuka </select>
+
+</mapper>
+  

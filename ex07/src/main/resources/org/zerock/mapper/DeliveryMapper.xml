@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.DeliveryMapper">
+
+
+	<!-- 出荷情報をIDで検索 / 출하 정보를 ID로 조회 -->
+	<select id="selectDeliveryById"
+		resultType="org.zerock.domain.DeliveryVO" parameterType="integer">
+		SELECT * FROM
+		ShukkaZyouhou WHERE ShukkaID = #{shukkaID}
+	</select>
+
+	<!-- 全ての出荷情報を検索 / 전체 출하 정보 조회 -->
+	<select id="selectAllHinmokus"
+		resultType="org.zerock.domain.HinmokuVO">
+		SELECT * FROM Hinmoku
+	</select>
+
+	<!-- 在庫品目 / 재고 품목 -->
+	<select id="getAllHinmoks"
+		resultType="org.zerock.domain.HinmokuVO">
+		SELECT HinmokuID, ZaikoKoodo, Hinmokumei, Kikaku,
+		Zentaishuuryou,
+		Soukosuuryou, Suuryou, Tanka, BikouID
+		FROM Hinmoku
+	</select>
+
+	<!-- 全ての出荷情報を検索 / 전체 출하 정보 조회 -->
+	<select id="selectAllDeliveries"
+		resultType="org.zerock.domain.DeliveryVO">
+		SELECT s.ShukkaID, s.Hitsuke, s.No,
+		s.Hitsuke_No as
+		hitsuke_No,
+		s.hitsuke_No_referType as hitsuke_No_referType,
+		so.Soukomei
+		as soukoMei,
+		ch.FirstItemName AS
+		hinmokuMei,
+		ch.OtherCount AS
+		otherHinmokuCount,
+		ch.SuuryouGoukei AS
+		suuryouGoukei,
+		ch.LatestSuuryou AS
+		latestSuuryou,
+		t.yuubinBangou AS
+		yuubinBangou,
+		t.zyuusho AS zyuusho,
+		t.Torihikisakimei AS torihikisakiMei,
+		s.TorihikisakiID,
+		s.ReferenceType,
+		t.TorihikisakiCode, t.TorihikisakiGroup1, t.TorihikisakiGroup2,
+		t.TorihikisakiKaiso,
+		t.Renrakusaki, s.TantoushaID, ta.Tantoushamei,
+		ta.TantoushaCode,
+		ta.Busho,
+		s.SoukoID,
+		so.SoukoKaiso, so.SoukoShozai,
+		so.SoukoCode,
+		s.ProjectID AS projectID, p.ProjectMeimei,
+		p.ProjectCode,
+		p.ProjectGroup1,
+		p.ProjectGroup2
+		FROM ShukkaZyouhou s
+		LEFT JOIN
+		Torihikisaki t ON s.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN
+		Tantousha ta ON s.TantoushaID = ta.TantoushaID
+		LEFT JOIN
+		Souko so ON
+		s.SoukoID = so.SoukoID
+		LEFT JOIN
+		Project p ON s.ProjectID = p.ProjectID
+		LEFT JOIN
+		(
+		SELECT
+		ch.hitsuke_No_referType,
+		MIN(ch.ItemName) AS
+		firstItemName,
+		COUNT(ch.ItemName) - 1 AS
+		otherCount,
+		SUM(ch.Suuryou) AS
+		suuryouGoukei,
+		MAX(ch.Suuryou) AS
+		LatestSuuryou
+		FROM Common_Hinmoku ch
+		GROUP BY
+		ch.Hitsuke_No_refertype
+		)
+		ch ON s.hitsuke_No_referType =
+		ch.hitsuke_No_referType
+		ORDER BY
+		s.hitsuke_No_referType DESC, s.No ASC
+	</select>
+
+	<select id="selectShukkaWithHinmoku"
+		resultType="org.zerock.domain.DeliveryVO">
+		SELECT
+		s.ShukkaID AS shukkaID,
+		s.Hitsuke AS hitsuke,
+		s.No AS
+		no,
+		s.Hitsuke_No AS hitsuke_No,
+		s.Hitsuke_No_ReferType AS
+		hitsuke_No_ReferType,
+		ch.Hitsuke_No_ReferType AS hitsuke_No_ReferType,
+		ch.Suuryou AS suuryou,
+		ch.Kikaku AS kikaku,
+		ch.ItemCode AS itemCode,
+		ch.ItemName AS itemName
+		FROM ShukkaZyouhou s
+		LEFT JOIN
+		Torihikisaki t ON
+		s.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN
+		Tantousha ta ON
+		s.TantoushaID = ta.TantoushaID
+		LEFT JOIN
+		Souko so ON s.SoukoID =
+		so.SoukoID
+		LEFT JOIN
+		Project p ON s.ProjectID = p.ProjectID
+		LEFT JOIN
+		Common_Hinmoku ch ON s.hitsuke_No_referType = ch.hitsuke_No_referType
+		LEFT JOIN (
+		SELECT
+		ch.hitsuke_No_referType
+		FROM Common_Hinmoku ch
+		GROUP BY
+		ch.hitsuke_No_referType
+		) ch
+		ON s.hitsuke_No_referType =
+		ch.hitsuke_No_referType
+		ORDER BY
+		s.hitsuke_No_referType DESC
+	</select>
+
+	<!-- 出荷情報の追加 / 출하 정보 추가 -->
+	<insert id="insertDelivery"
+		parameterType="org.zerock.domain.DeliveryVO" useGeneratedKeys="true"
+		keyProperty="no" keyColumn="No">
+		INSERT INTO ShukkaZyouhou (
+		ShukkaID,
+		Hitsuke, No, TorihikisakiID,
+		TantoushaID, SoukoID, ProjectID,
+		Renrakusaki,
+		yuubinBangou, Zyuusho, ShinKoumokuTsuika, ReferenceType
+		)
+		VALUES (
+		SHUKKA_seq.nextval,
+		#{hitsuke},
+		(SELECT COALESCE(MAX(No), 0) + 1
+		FROM ShukkaZyouhou
+		WHERE Hitsuke = #{hitsuke}),
+		#{torihikisakiID},
+		#{tantoushaID},
+		#{soukoID},
+		#{projectID},
+		#{renrakusaki},
+		#{yuubinBangou},
+		#{zyuusho},
+		#{shinKoumokuTsuika},
+		'5'
+		)
+	</insert>
+
+	<!-- 共通品目 / 공통 품목 -->
+	<select id="selectCommonHinmoku"
+		resultType="org.zerock.domain.CommonHinmokuVO">
+		SELECT * FROM Common_Hinmoku
+	</select>
+
+
+	<!-- 共通品目の追加 / 공통 품목 추가 -->
+	<insert id="insertCommonHinmoku"
+		parameterType="org.zerock.domain.CommonHinmokuVO">
+		<!-- INSERT INTO Common_Hinmoku ( CommonHinmokuID, ReferenceType, Hitsuke_No, 
+			ItemCode, ItemName, kikaku, Suuryou, tekiyo ) VALUES ( CommonHinmoku_seq.nextval, 
+			'5', #{hitsuke_No}, #{itemCode}, #{itemName}, #{kikaku}, #{suuryou}, #{tekiyo} 
+			) -->
+		INSERT INTO Common_Hinmoku (
+		CommonHinmokuID, ReferenceType,
+		Hitsuke_No, ItemCode, ItemName, kikaku,
+		Suuryou, tekiyo
+		) VALUES (
+		CommonHinmoku_seq.nextval, '5', #{hitsuke_No}, #{itemCode},
+		#{itemName}, #{kikaku},
+		#{suuryou}, #{tekiyo}
+		)
+	</insert>
+
+	<!-- , (select MAX(5) from ShukkaZyouhou) -->
+
+	<!-- 出荷情報の更新 / 출하 정보 업데이트 -->
+	<update id="updateDelivery"
+		parameterType="org.zerock.domain.DeliveryVO">
+		UPDATE ShukkaZyouhou
+		SET
+		Hitsuke = #{hitsuke},             <!-- 出荷日付 / 출하 일자 -->
+		No = #{no},                       <!-- 一連番号 / 일련 번호 -->
+		Hitsuke_No = #{hitsukeNo},        <!-- 出荷番号 / 출하 번호 -->
+		TorihikisakiID = #{torihikisakiId}, <!-- 取引先ID / 거래처 ID -->
+		SoukoMei = #{soukoMei},           <!-- 倉庫名 / 창고명 -->
+		Hinmokumei = #{hinmokumei},       <!-- 品目名 / 품목명 -->
+		SuuryouGoukei = #{suuryouGoukei}, <!-- 数量合計 / 수량 합계 -->
+		TantoushaID = #{tantoushaId},     <!-- 担当者ID / 담당자 ID -->
+		SoukoID = #{soukoId},             <!-- 倉庫ID / 창고 ID -->
+		ProjectID = #{projectId}          <!-- プロジェクトID / 프로젝트 ID -->
+		WHERE
+		ShukkaID = #{shukkaId}           <!-- 特定出荷IDでレコード職別 / 특정 출하 ID로 레코드 식별 -->
+	</update>
+
+
+	<delete id="deleteDelivery"
+		parameterType="org.zerock.domain.DeliveryVO">
+		DELETE FROM ShukkaZyouhou WHERE shukkaID = #{shukkaID}
+	</delete>
+
+	<!-- 출하 데이터를 가져오는 SQL / 出荷データを取得するSQL -->
+	<select id="getDelivery"
+		resultType="org.zerock.domain.DeliveryVO">
+		SELECT s.shukkaID AS shukkaID, s.hitsuke AS hitsuke,
+		s.no AS no, s.hitsuke_no AS hitsuke_no, 
+        s.hitsuke_no_refertype AS hitsuke_no_refertype,
+		s.shukkashizishoukaiID AS shukkaShiziShoukaiID, 
+        s.torihikisakiID AS torihikisakiID,
+		s.tantoushaID AS tantoushaID, 
+        s.soukoID AS soukoID, 
+		s.projectID AS projectID,
+		s.shinkoumokutsuika AS shinKoumokuTsuika,
+        ch.suuryou AS suuryou,
+		t.torihikisakicode AS torihikisakiCode,
+		t.torihikisakimei AS torihikisakiMei, 
+        t.renrakusaki AS renrakusaki,
+		t.yuubinbangou AS yuubinBangou, 
+        ta.tantoushacode AS tantoushaCode,
+		ta.tantoushamei AS tantoushaMei, 
+        so.soukocode AS soukoCode, 
+        so.soukoMei AS soukoMei,
+		p.projectcode AS projectCode, 
+        p.projectmeimei AS projectMeimei,
+		ch.itemcode AS hinmokuCode, 
+        ch.itemname AS hinmokuMei
+		FROM SHUKKAZYOUHOU s
+		LEFT JOIN
+        Torihikisaki t ON s.TorihikisakiID = t.TorihikisakiID
+        LEFT JOIN
+        Tantousha ta ON s.TantoushaID = ta.TantoushaID
+        LEFT JOIN
+		Souko so ON s.SoukoID = so.SoukoID
+		LEFT JOIN
+		Project p ON s.ProjectID = p.ProjectID
+		LEFT JOIN
+		Common_Hinmoku ch ON s.hitsuke_No_referType = ch.hitsuke_No_referType
+	</select>
+
+
+
+
+</mapper>

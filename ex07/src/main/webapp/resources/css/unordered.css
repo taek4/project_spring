@@ -1,0 +1,262 @@
+body {
+	font-family: Arial, sans-serif;
+	background-color: #f9f9f9;
+}
+
+.container {
+	max-width: 1400px; /* 컨테이너의 최대 너비를 늘림 */
+	margin: 20px auto; /* 위아래 간격 추가 */
+	padding: 20px; /* 컨테이너 내부 여백 증가 */
+	background-color: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+	font-size: 24px;
+	margin-bottom: 20px;
+}
+
+.form-group {
+	display: flex;
+	align-items: center;
+	gap: 10px; /* 요소 간의 간격 */
+	margin-bottom: 15px;
+}
+
+.form-group label {
+	min-width: 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+.form-group input, .form-group select {
+	flex: 1; /* 입력 필드가 가능한 공간을 채움 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+.form-group button.search-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+	border: 1px solid #ccc;
+	background-color: #f1f1f1;
+	border-radius: 4px;
+	cursor: pointer;
+	height: 38px; /* 입력 필드와 동일한 높이 */
+	box-sizing: border-box;
+}
+
+.form-group button:hover {
+	background-color: #0056b3;
+}
+
+.additional-filters {
+	display: none; /* 기본적으로 숨김 */
+	margin-top: 10px; /* 위 입력 필드와 간격 */
+	display: block; /* block으로 변경하여 아래 정렬 */
+}
+
+.additional-filters input {
+	width: 100%; /* 필터 입력 필드가 컨테이너 너비를 채움 */
+	padding: 8px;
+	margin-bottom: 10px; /* 필드 간의 간격 */
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+.additional-filters label {
+	display: block; /* 라벨을 필드 위로 정렬 */
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.toggle-button {
+	padding: 4px 8px; /* 버튼 크기를 작게 조정 */
+	border: 1px solid #ccc;
+	background-color: #f1f1f1;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 12px; /* 텍스트 크기 축소 */
+	color: #333;
+	margin-left: auto; /* 버튼을 오른쪽 끝으로 정렬 */
+}
+
+.toggle-button:hover {
+	background-color: #e0e0e0;
+}
+
+.modal {
+	padding: 0 !important; /* 모달 창의 기본 패딩 제거 */
+}
+
+.modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.modal-close {
+	cursor: pointer;
+	color: red;
+}
+
+/* 모달 창 z-index 수정 */
+#projectSearchModal {
+	z-index: 1050; /* Bootstrap 기본 모달 z-index */
+}
+
+/* 어두운 배경 추가 (Bootstrap 기본 backdrop 스타일 확인) */
+.modal-backdrop {
+	z-index: 1049; /* 모달 뒤에 배경이 표시되도록 설정 */
+}
+
+.overlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 999;
+}
+
+.additional-filters {
+	display: flex; /* 플렉스 박스를 사용하여 자식 요소를 한 줄로 정렬 */
+	align-items: center; /* 세로 방향 가운데 정렬 */
+	gap: 10px; /* 요소 간 간격 설정 */
+}
+
+#warehouseGroupLabel {
+	flex: 0 0 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+#warehouseGroupSearch {
+	flex: 0 0 auto; /* 돋보기 아이콘 크기를 고정 */
+	font-size: 16px; /* 아이콘 크기 */
+	color: #007bff;
+	cursor: pointer;
+}
+
+#warehouseGroupText {
+	flex: 1; /* 입력 필드가 남은 공간을 차지하도록 설정 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+#projectGroup1Label {
+	flex: 0 0 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+#projectGroup1Search {
+	flex: 0 0 auto; /* 돋보기 아이콘 크기를 고정 */
+	font-size: 16px; /* 아이콘 크기 */
+	color: #007bff;
+	cursor: pointer;
+}
+
+#projectGroup1 {
+	flex: 1; /* 입력 필드가 남은 공간을 차지하도록 설정 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+#projectGroup2Label {
+	flex: 0 0 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+#projectGroup2Search {
+	flex: 0 0 auto; /* 돋보기 아이콘 크기를 고정 */
+	font-size: 16px; /* 아이콘 크기 */
+	color: #007bff;
+	cursor: pointer;
+}
+
+#projectGroup2 {
+	flex: 1; /* 입력 필드가 남은 공간을 차지하도록 설정 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+/* 거래처 필터 CSS */
+#clientGroup1Label, #clientGroup2Label, #clientHierarchyLabel {
+	flex: 0 0 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+#clientGroup1, #clientGroup2, #clientHierarchy {
+	flex: 1; /* 입력 필드가 남은 공간을 차지하도록 설정 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+#clientGroup1Search, #clientGroup2Search, #clientHierarchySearch {
+	flex: 0 0 auto; /* 돋보기 아이콘 크기를 고정 */
+	font-size: 16px; /* 아이콘 크기 */
+	color: #007bff;
+	cursor: pointer;
+}
+
+/* 품목 코드 필터 CSS */
+#itemGroup1Label, #itemGroup2Label, #itemGroup3Label,
+	#itemHierarchyLabel {
+	flex: 0 0 150px; /* 라벨의 고정 너비 설정 */
+	font-weight: bold;
+	text-align: left; /* 텍스트 왼쪽 정렬 */
+}
+
+#itemGroup1, #itemGroup2, #itemGroup3, #itemHierarchy {
+	flex: 1; /* 입력 필드가 남은 공간을 차지하도록 설정 */
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+#itemGroup1Search, #itemGroup2Search, #itemGroup3Search,
+	#itemHierarchySearch {
+	flex: 0 0 auto; /* 돋보기 아이콘 크기를 고정 */
+	font-size: 16px; /* 아이콘 크기 */
+	color: #007bff;
+	cursor: pointer;
+}
+
+.search-button {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.search-button i {
+	font-size: 16px;
+	color: #007bff;
+}
+
+.search-button:hover i {
+	color: #0056b3; /* 호버 시 색상 변경 */
+}

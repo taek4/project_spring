@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.zerock.mapper.SaleMapper">
+
+	<!-- 판매 목록 조회 -->
+	<select id="getAllSale" resultType="org.zerock.domain.SaleVO">
+		SELECT
+		    h.Hitsuke_NO AS hitsuke_no,
+		    h.Hitsuke_No_refertype AS hitsukeNoRefertype,
+		    h.Zeikomikubun AS zeikomikubun,
+		    h.Hanbaibikou AS hanbaibikou,
+		    t.TorihikisakiID AS torihikisakiID,
+		    t.Torihikisakimei AS torihikisakimei,
+		    s.SoukoID AS soukoID,
+		    s.Soukomei AS soukomei,
+            tsu.TsukaID AS tsukaID,
+		    tsu.Tsuukakoodo AS tsuukakoodo,
+		    tsu.Tsuukameimei AS tsuukamei,
+		    p.ProjectID AS projectID,
+		    p.Projectmeimei AS projectmei,
+		    tan.TantoushaID AS tantoushaID,
+		    tan.Tantoushamei AS tantoushamei,
+		    ch.FirstItemName AS hinmokumei,
+    		ch.OtherCount AS otherHinmokuCount,
+    		ch.HanbaiKingakuGoukei AS hanbaiKingakuGoukei
+		FROM Hanbai h
+		LEFT JOIN Souko s ON h.SoukoID = s.SoukoID
+		LEFT JOIN Torihikisaki t ON h.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN Tsuuka tsu ON h.TsukaID = tsu.TsukaID
+		LEFT JOIN Project p ON h.ProjectID = p.ProjectID  
+		LEFT JOIN Tantousha tan ON h.TantoushaID = tan.tantoushaID
+		LEFT JOIN 
+    	(
+        SELECT 
+            ch.Hitsuke_No_refertype,
+            MIN(ch.ItemName) AS FirstItemName,
+            COUNT(ch.ItemName) - 1 AS OtherCount,
+            SUM(ch.Suuryou * (ch.Tanka + ch.Bugase)) AS HanbaiKingakuGoukei
+        FROM 
+            Common_Hinmoku ch
+        GROUP BY 
+            ch.Hitsuke_No_refertype
+	    ) ch ON h.Hitsuke_No_refertype = ch.Hitsuke_No_refertype
+		ORDER BY 
+	    h.Hitsuke DESC, 
+	    h.No ASC
+	</select>
+	
+	<!-- 결제 목록 조회 -->
+	<select id="getAllKessai" resultType="org.zerock.domain.KessaiVO">
+	    SELECT
+			    k.KessaiID AS kessaiID,
+			    k.KessaiYouseishaID AS kessaiyouseishaID,   
+			    k.KessaiYouseibi AS kessaiyouseibi,
+			    t.TorihikisakiID AS torihikisakiID,        
+			    t.Torihikisakimei AS torihikisakimei,        
+			    h.HinmokuID AS hinmokuID,        
+			    h.Hinmokumei AS hinmokumei,        
+			    k.Kessaikingaku AS kessaikingaku,         
+			    k.Kessaihouhou AS kessaihouhou,         
+			    k.Kessaizyoutai AS kessaizyoutai,         
+			    k.Shouninbangou AS shouninbangou,         
+			    k.Zaikodenpyo AS zaikodenpyo,           
+			    k.Jyotaibetsushorikinou AS jyotaibetsushorikinou, 
+			    k.Kaikeidenpyo AS kaikeidenpyo,  
+			    k.Uchiwake AS uchiwake
+			FROM Kessai k
+			JOIN Hinmoku h ON k.HinmokuID = h.HinmokuID
+			JOIN Torihikisaki t ON k.TorihikisakiID = t.TorihikisakiID
+	</select>
+	
+	<!-- 현황 목록 조회 -->
+	<select id="getAllGenjou" resultType="org.zerock.domain.SaleVO">
+		SELECT
+		    h.Hitsuke AS hitsuke,
+		    h.Hitsuke_No_refertype AS hitsukeNoRefertype,
+		    t.TorihikisakiID AS torihikisakiID,
+		    t.Torihikisakimei AS torihikisakimei,
+            ch.itemcode AS hinmokuID,        
+		    ch.itemname AS hinmokumei,
+		    k.Kessaikingaku AS kessaikingaku, 
+		    ch.Kikaku AS kikaku,
+		    ch.Tanka AS tanka,
+		    ch.Suuryou AS suuryou,
+		    ch.KyoukyuKingaku AS kyoukyuKingaku,
+		    ch.Bugase AS bugase,
+		    SUM(ch.Suuryou) AS suuryou_sum, -- 수량 합계
+		    ROUND(AVG(ch.Tanka), 2) AS tanka_avg, -- 단가 평균
+		    SUM(ch.Suuryou * ch.Tanka) AS kyoukyuKingaku_sum, -- 공급가액 합계
+		    ROUND(SUM(ch.Suuryou * ch.Tanka) / 10, 2) AS bugase_sum, -- 부가세 합계
+		    ROUND(SUM(ch.Suuryou * ch.Tanka) + SUM(ch.Suuryou * ch.Tanka) / 10, 2) AS kessaikingaku_sum, -- 합계
+		    TO_DATE(SUBSTR(ch.hitsuke_no, 1, 10), 'YYYY/MM/DD') AS hitsuke_date, -- 추가
+		    TO_NUMBER(SUBSTR(ch.hitsuke_no, 12)) AS hitsuke_seq -- 추가
+		FROM Hanbai h
+		LEFT JOIN Torihikisaki t ON h.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN Kessai k ON h.KessaiID = k.KessaiID
+		JOIN Common_hinmoku ch ON h.Hitsuke_No_refertype = ch.Hitsuke_No_refertype
+		GROUP BY 
+	    h.Hitsuke, 
+	    h.Hitsuke_No_refertype, 
+	    t.TorihikisakiID, 
+	    t.Torihikisakimei, 
+	    ch.itemcode, 
+		ch.itemname, 
+		TO_DATE(SUBSTR(ch.hitsuke_no, 1, 10), 'YYYY/MM/DD'), SUBSTR(ch.hitsuke_no, 1, 10), 
+		ch.hitsuke_no, 1, 10, 
+		k.Kessaikingaku, 
+		TO_NUMBER(SUBSTR(ch.hitsuke_no, 12)), SUBSTR(ch.hitsuke_no, 12), 
+		ch.Kikaku, 
+		ch.hitsuke_no, 12, 
+		ch.Tanka, 
+		ch.Suuryou, 
+		ch.KyoukyuKingaku, 
+		ch.Bugase -- 추가
+		ORDER BY 
+	    TO_DATE(SUBSTR(ch.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC, 
+	    TO_NUMBER(SUBSTR(ch.hitsuke_no, 12)) DESC
+	</select>
+	
+	<!-- 판매단가조회 -->
+	<select id="getAllHanbaiTanka" resultType="org.zerock.domain.SaleVO">
+		SELECT
+		    h.Hitsuke_NO AS hitsuke_no,
+		    h.Hitsuke_No_refertype AS hitsukeNoRefertype,
+		    h.Zeikomikubun AS zeikomikubun,
+		    h.Hanbaibikou AS hanbaibikou,
+		    t.TorihikisakiID AS torihikisakiID,
+		    t.Torihikisakimei AS torihikisakimei,
+            ch.itemcode AS hinmokuID,        
+		    ch.itemname AS hinmokumei,
+		    s.SoukoID AS soukoID,
+		    s.Soukomei AS soukomei,
+            tsu.TsukaID AS tsukaID,
+		    tsu.Tsuukameimei AS tsuukamei,
+		    p.ProjectID AS projectID,
+		    p.Projectmeimei AS projectmei,
+		    tan.TantoushaID AS tantoushaID,
+		    tan.Tantoushamei AS tantoushamei,
+		    k.Kessaikingaku AS kessaikingaku, 
+		    ch.Kikaku AS kikaku,
+		    ch.Tanka AS tanka,
+		    ch.Suuryou AS suuryou,
+		    ch.KyoukyuKingaku AS kyoukyuKingaku,
+		    ch.Bugase AS bugase
+		FROM Hanbai h
+		LEFT JOIN Souko s ON h.SoukoID = s.SoukoID
+		LEFT JOIN Torihikisaki t ON h.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN Tsuuka tsu ON h.TsukaID = tsu.TsukaID
+		LEFT JOIN Project p ON h.ProjectID = p.ProjectID  
+		LEFT JOIN Tantousha tan ON h.TantoushaID = tan.TantoushaID
+		LEFT JOIN Kessai k ON h.KessaiID = k.KessaiID
+		JOIN Common_hinmoku ch ON h.Hitsuke_No_refertype = ch.Hitsuke_No_refertype
+		ORDER BY 
+    TO_DATE(SUBSTR(ch.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC, 
+    TO_NUMBER(SUBSTR(ch.hitsuke_no, 12)) DESC
+	</select>
+	
+	<update id="release">
+    UPDATE Common_Hinmoku
+    SET tanka = #{release}
+    WHERE itemName = #{hinmokumei}
+    AND Hitsuke_No_refertype = #{hitsukeNoRefertype}
+	</update>
+	
+	<insert id="insertSale" parameterType="org.zerock.domain.SaleVO" useGeneratedKeys="true" keyProperty="no" keyColumn="No">
+      INSERT INTO Hanbai (
+        HanbaiID, Hitsuke, No, ReferenceType, TorihikisakiID, TantoushaID,
+        SoukoID, Zeikomikubun, TsukaID, ProjectID, HANBAIBIKOU
+    ) VALUES (
+        Hanbai_seq.nextval,
+        #{hitsuke},
+        (SELECT COALESCE(MAX(No), 0) + 1
+         FROM Hanbai
+         WHERE Hitsuke = #{hitsuke}),
+        '3',
+        #{torihikisakiID},
+        #{tantoushaID},
+        #{soukoID},
+        #{zeikomikubun},
+        #{tsukaID},
+        #{projectID},
+        #{memo}
+    )
+	</insert>
+	
+	<insert id="insertSale2" parameterType="org.zerock.domain.SaleVO" useGeneratedKeys="true" keyProperty="no" keyColumn="No">
+      INSERT INTO Hanbai (
+        HanbaiID, Hitsuke, No, ReferenceType, TorihikisakiID, TantoushaID,
+        SoukoID, Zeikomikubun
+    ) VALUES (
+        Hanbai_seq.nextval,
+        #{hitsuke, jdbcType=DATE},
+        (SELECT COALESCE(MAX(No), 0) + 1
+         FROM Hanbai
+         WHERE Hitsuke = #{hitsuke, jdbcType=DATE}),
+        '3',
+        #{torihikisakiID, jdbcType=NUMERIC},
+        #{tantoushaID, jdbcType=NUMERIC},
+        #{soukoID, jdbcType=NUMERIC},
+        #{zeikomikubun, jdbcType=VARCHAR}
+    )
+	</insert>
+
+	<insert id="insertCommonHinmoku" parameterType="org.zerock.domain.CommonHinmokuVO">
+	    INSERT INTO Common_Hinmoku (
+	        CommonHinmokuID, ReferenceType, hinmokuID, Hitsuke_No, ItemCode, ItemName, kikaku, 
+	        Suuryou, Tanka, KyoukyuKingaku, Bugase
+	    ) VALUES (
+	        CommonHinmoku_seq.nextval, '3', #{hinmokuID} ,#{hitsukeNo}, #{itemCode}, #{itemName}, #{kikaku},
+	        #{suuryou}, #{tanka}, #{kyoukyuKingaku}, #{bugase}
+	    )
+	</insert>
+	
+	<!-- 품목 리스트 조회 -->
+	<select id="getHinmokuList" resultType="org.zerock.domain.HinmokuVO">
+	    SELECT 
+	        HinmokuID, 
+	        ZaikoKoodo, 
+	        Hinmokumei, 
+	        Kikaku, 
+	        Tanka, 
+	        KyoukyuuGaku, 
+	        Shouhizei 
+	    FROM Hinmoku
+	</select>
+</mapper>

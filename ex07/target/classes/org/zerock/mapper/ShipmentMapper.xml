@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.ShipmentMapper">
+
+<select id="getList" resultType="org.zerock.domain.ShipmentVO">
+    SELECT 
+        s.Hitsuke_No AS hitsuke_No,
+        s.Hitsuke_No_refertype AS hitsuke_No_refertype,
+        s.ShukkaShiziShoukaiID AS shukkaShiziShoukaiID,
+        h.FirstItemName AS itemName,
+        h.OtherCount AS otherHinmokuCount,
+        s.TorihikisakiID AS torihikisakiID,
+        s.TantoushaID AS tantoushaID,
+        s.SoukoID AS soukoID,
+        so.Soukomei AS soukoMei, -- 창고명
+        s.projectID AS projectID,
+        h.Suuryou AS suuryou,
+        s.ShinkouZyoutai AS shinkouZyoutai,
+        s.ShukkaYoteibi AS shukkaYoteibi
+    FROM 
+        ShukkaShiziShoukai s
+    LEFT JOIN Torihikisaki t ON s.TorihikisakiID = t.TorihikisakiID
+    LEFT JOIN Tantousha ta ON s.TantoushaID = ta.TantoushaID
+    LEFT JOIN Souko so ON s.SoukoID = so.SoukoID
+    LEFT JOIN Project p ON s.ProjectID = p.ProjectID
+    LEFT JOIN (
+        SELECT 
+            h.Hitsuke_No_refertype,
+            MIN(h.ItemName) AS FirstItemName,
+            COUNT(h.ItemName) - 1 AS OtherCount,
+            SUM(h.Suuryou) AS Suuryou
+        FROM 
+            Common_Hinmoku h
+        GROUP BY 
+            h.Hitsuke_No_refertype
+    ) h ON s.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+    ORDER BY 
+        s.Hitsuke DESC, 
+        s.No ASC
+</select>
+
+
+	
+<insert id="insertshipment" parameterType="org.zerock.domain.ShipmentVO" useGeneratedKeys="true" keyProperty="no" keyColumn="No">
+    INSERT INTO ShukkaShiziShoukai (
+        ShukkaShiziShoukaiID,
+        Hitsuke,
+        No,
+        REFERENCETYPE,
+        TorihikisakiID,
+        TantoushaID,
+        SoukoID,
+        projectID,
+        ShukkaYoteibi,
+        YuubinBangou,
+        hinmokuID
+    ) VALUES (
+        ShukkaShiziShoukai_seq.nextval, 
+        #{hitsuke}, 
+        (SELECT COALESCE(MAX(No), 0) + 1
+         FROM ShukkaShiziShoukai 
+         WHERE Hitsuke = #{hitsuke}),
+         '4',
+        #{torihikisakiID},    -- 거래처ID
+        #{tantoushaID},       -- 담당자
+        #{soukoID},           -- 창고ID
+        #{projectID},         -- 프로젝트ID
+        #{shukkaYoteibi},     -- 출하 예정일
+        #{yuubinBangou},       -- 우편번호
+        #{hinmokuID}			--품목ID
+    )
+</insert>
+
+
+<insert id="insertCommonHinmoku" parameterType="org.zerock.domain.CommonHinmokuVO">
+    INSERT INTO Common_Hinmoku (
+        CommonHinmokuID, ReferenceType, Hitsuke_No, ItemCode, ItemName, kikaku, 
+        Suuryou,hinmokuID
+    ) VALUES (
+        CommonHinmoku_seq.nextval, '4', #{hitsuke_No}, #{itemCode}, #{itemName}, #{kikaku},
+        #{suuryou}, #{hinmokuID}
+    )
+</insert>
+
+
+<update id="taiupdate" parameterType="org.zerock.domain.ShipmentVO">
+    UPDATE shukkaShiziShoukai
+    SET shinkouZyoutai = #{shinkouZyoutai}
+    WHERE shukkaShiziShoukaiID = #{shukkaShiziShoukaiID}
+</update>
+
+
+<update id="shipmentcorrection" parameterType="org.zerock.domain.ShipmentVO">
+    UPDATE ShukkaShiziShoukai
+    SET 
+        TorihikisakiID = #{torihikisakiID}, 
+        TantoushaID = #{tantoushaID}, 
+        SoukoID = #{soukoID}, 
+        projectID = #{projectID}, 
+        ShukkaYoteibi = TO_DATE(#{shukkaYoteibi}, 'YYYY-MM-DD'), 
+        YuubinBangou = #{yuubinBangou}
+    WHERE Hitsuke_No = #{hitsuke_No}
+</update> 
+
+
+
+<update id="shipmentupdate" parameterType="org.zerock.domain.ShipmentVO">
+    UPDATE shukkaShiziShoukai
+    SET TorihikisakiID = #{torihikisakiID}, 
+        TantoushaID = #{tantoushaID}, 
+        SoukoID = #{soukoID}, 
+        projectID = #{projectID}, 
+   		shukkaYoteibi = #{shukkaYoteibi, jdbcType=DATE},
+        YuubinBangou = #{yuubinBangou}
+    WHERE shukkaShiziShoukaiID = #{shukkaShiziShoukaiID}
+</update>
+
+
+<update id="hinmokuupdate" parameterType="org.zerock.domain.ShipmentVO">
+    UPDATE COMMON_HINMOKU
+    SET ItemName = #{itemName},
+        ItemCode = #{itemCode}, 
+        Suuryou = #{suuryou}, 
+        Kikaku = #{kikaku}
+    WHERE hitsuke_No_refertype = #{hitsuke_No_refertype}
+</update>
+
+
+
+    <!-- CommonHinmoku 데이터 삽입 -->
+<insert id="hinmokuinsert" parameterType="org.zerock.domain.CommonHinmokuVO">
+	 INSERT INTO Common_Hinmoku (
+        CommonHinmokuID, ReferenceType, Hitsuke_No, ItemCode, ItemName, kikaku, 
+        Suuryou,hinmokuID
+    ) VALUES (
+        CommonHinmoku_seq.nextval, '4', #{hitsuke_No}, #{itemCode}, #{itemName}, #{kikaku},
+        #{suuryou}, #{hinmokuID}
+    )
+</insert>  
+
+
+
+
+
+
+<select id="getShipmentByHitsukeNo" resultType="org.zerock.domain.ShipmentVO">
+    SELECT 
+            s.ShukkaShiziShoukaiID,
+            s.Hitsuke_No,
+            s.Hitsuke,
+            s.TorihikisakiID,
+            t.Torihikisakimei AS torihikisakiMei, -- 거래처명
+            t.Renrakusaki AS Renrakusaki, -- 거래처 연락처
+            s.TantoushaID,
+            ta.Tantoushamei AS tantoushaMei, -- 담당자명
+            s.SoukoID,
+            so.Soukomei AS soukoMei, -- 창고명
+            s.projectID,
+            p.ProjectMeimei AS projectMeimei, -- 프로젝트명
+            ch.HinmokuID,
+            ch.ItemCode AS ItemCode,
+            ch.ItemName AS ItemName,
+            ch.Suuryou AS Suuryou,
+            ch.Kikaku AS Kikaku,
+            s.ShinkouZyoutai,
+            s.Kubun,
+            s.ShukkaYoteibi,
+            s.YuubinBangou,
+            s.TekiyouYoushiki
+        FROM 
+            ShukkaShiziShoukai s
+        LEFT JOIN Torihikisaki t ON s.TorihikisakiID = t.TorihikisakiID
+        LEFT JOIN Tantousha ta ON s.TantoushaID = ta.TantoushaID
+        LEFT JOIN Souko so ON s.SoukoID = so.SoukoID
+        LEFT JOIN Project p ON s.ProjectID = p.ProjectID
+        LEFT JOIN Common_Hinmoku ch ON s.Hitsuke_No = ch.Hitsuke_No
+        WHERE 
+            s.Hitsuke_No = #{hitsuke_No}
+</select>
+
+<select id="statusList" parameterType="map"
+		resultType="org.zerock.domain.ShipmentVO">
+		SELECT
+		sh.hitsuke_no AS hitsukeNo,
+		sh.Hitsuke_No_refertype,
+		h.itemname AS hinmokuMei,
+		h.suuryou AS suuryou,
+		h.tanka AS tanka,
+		h.kyoukyuKingaku AS kyoukyuKingaku,
+		t.TORIHIKISAKIMEI as torihikisakiMei,
+		h.tekiyo AS tekiyo,
+		h.kyoukyuKingaku / 10 AS bugase,
+		h.kyoukyuKingaku + h.kyoukyuKingaku / 10 AS goukei,
+		s.soukoMei AS soukoMei
+		FROM
+		SHUKKASHIZISHOUKAI sh
+		JOIN
+		common_hinmoku h ON sh.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+		LEFT JOIN
+		torihikisaki t ON sh.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN
+		tantousha ts ON sh.tantoushaID = ts.tantoushaID
+		LEFT JOIN
+		souko s ON sh.soukoID = s.soukoID
+		LEFT JOIN
+		project p ON sh.projectID = p.projectID
+		WHERE
+		(#{nyuuryokuBiKaishi, jdbcType=DATE} IS NULL OR TO_DATE(SUBSTR(h.hitsuke_no, 1, 10), 'YYYY/MM/DD') &gt;= #{nyuuryokuBiKaishi,
+		jdbcType=DATE})
+		AND (#{nyuuryokuBiShuuryou, jdbcType=DATE} IS NULL OR TO_DATE(SUBSTR(h.hitsuke_no, 1, 10), 'YYYY/MM/DD') &lt;=
+		#{nyuuryokuBiShuuryou, jdbcType=DATE})
+		AND (#{soukoID, jdbcType=INTEGER} IS NULL OR sh.soukoID = #{soukoID,
+		jdbcType=INTEGER})
+		AND (#{projectID, jdbcType=INTEGER} IS NULL OR sh.projectID = #{projectID,
+		jdbcType=INTEGER})
+		AND (#{torihikisakiID, jdbcType=INTEGER} IS NULL OR sh.torihikisakiID =
+		#{torihikisakiID, jdbcType=INTEGER})
+		AND (#{hinmokuMei, jdbcType=VARCHAR} IS NULL OR h.itemName =
+		#{hinmokuMei, jdbcType=VARCHAR})
+		AND (#{tantoushaID, jdbcType=INTEGER} IS NULL OR sh.tantoushaID =
+		#{tantoushaID, jdbcType=INTEGER})
+		ORDER BY
+		TO_DATE(SUBSTR(sh.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC, 
+    	TO_NUMBER(SUBSTR(sh.hitsuke_no, 12)) DESC
+	</select>
+
+
+
+
+    <!-- 품목 리스트 조회 (Hinmoku 테이블) -->
+    <select id="getAllHinmoku" resultType="org.zerock.domain.HinmokuVO">
+    SELECT 
+        HinmokuID, 
+        ZaikoKoodo, 
+        hinmokuMei, 
+        Kikaku,
+        Suuryou
+    FROM 
+        Hinmoku
+</select>
+
+</mapper>

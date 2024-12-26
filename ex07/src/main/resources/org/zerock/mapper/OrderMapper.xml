@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.zerock.mapper.OrderMapper">
+
+	<!-- 주문서 목록 조회 -->
+	<select id="getOrderList" resultType="org.zerock.domain.OrderVO">
+		SELECT
+		j.Hitsuke_No AS hitsukeNo,
+		j.Hitsuke_No_refertype AS hitsukeNoRefertype,
+		t.Torihikisakimei AS torihikisakiMei,
+		a.Tantoushamei AS tantoushaMei,
+		h.FirstItemName AS hinmokuMei,
+		h.OtherCount AS otherHinmokuCount,
+		TO_CHAR(j.NoukiIchija, 'YYYY-MM-DD') AS noukiIchija,
+		h.JumunKingakuGoukei AS jumunKingakuGoukei,
+		j.Status AS status
+		FROM
+		Jumunsho j
+		LEFT JOIN
+		Torihikisaki t ON j.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN
+		Tantousha a ON j.TantoushaID = a.TantoushaID
+		LEFT JOIN
+		(
+		SELECT
+		h.Hitsuke_No_refertype,
+		MIN(h.ItemName) AS FirstItemName,
+		COUNT(h.ItemName) - 1 AS OtherCount,
+		SUM(h.Suuryou * (h.Tanka + h.Bugase)) AS JumunKingakuGoukei
+		FROM
+		Common_Hinmoku h
+		GROUP BY
+		h.Hitsuke_No_refertype
+		) h ON j.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+		ORDER BY
+		j.Hitsuke DESC,
+		j.No DESC
+
+	</select>
+
+	<select id="getReleaseList"
+		resultType="org.zerock.domain.OrderVO">
+		SELECT
+		j.Hitsuke_No AS hitsukeNo,
+		t.Torihikisakimei AS torihikisakiMei,
+		j.Hitsuke_No_refertype AS hitsukeNoRefertype,
+		h.itemname AS hinmokuMei,
+		h.kikaku AS kikaku,
+		h.MIHANBAISUURYOU AS mihanbaisuuryou,
+		TO_CHAR(j.NoukiIchija, 'YYYY/MM/DD') AS noukiIchija,
+		h.TEKIYO AS tekiyo
+		FROM
+		jumunsho j
+		LEFT JOIN
+		Common_Hinmoku h ON j.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+		LEFT JOIN
+		Torihikisaki t ON j.TORIHIKISAKIID = t.TorihikisakiID
+		ORDER BY
+		TO_DATE(SUBSTR(j.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC,
+		TO_NUMBER(SUBSTR(j.hitsuke_no, 12)) DESC
+	</select>
+
+	<update id="release">
+		UPDATE Common_Hinmoku
+		SET MIHANBAISUURYOU = MIHANBAISUURYOU - #{release}
+		WHERE itemName = #{hinmokuMei}
+		AND Hitsuke_No_refertype = #{hitsukeNoRefertype}
+		AND MIHANBAISUURYOU >= #{release}
+	</update>
+
+
+	<!-- 미판매현황 조회 -->
+	<select id="unsoldList" resultType="org.zerock.domain.OrderVO">
+		SELECT
+		j.Hitsuke_No AS hitsukeNo,
+		h.itemname AS hinmokuMei,
+		h.SUURYOU AS suuryou,
+		h.kikaku AS kikaku,
+		h.MIHANBAISUURYOU AS mihanbaisuuryou,
+		h.MIHANBAIKYOUKYUKINGAKU AS mihanbaikyoukyukingaku,
+		h.MIHANBAIBUGASE AS mihanbaibugase,
+		t.Torihikisakimei AS torihikisakiMei,
+		h.TEKIYO AS tekiyo,
+		TO_CHAR(j.NoukiIchija, 'YYYY/MM/DD') AS noukiIchija
+		FROM
+		jumunsho j
+		LEFT JOIN
+		Common_Hinmoku h ON j.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+		LEFT JOIN
+		Torihikisaki t ON j.TORIHIKISAKIID = t.TorihikisakiID
+		ORDER BY
+		TO_DATE(SUBSTR(j.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC,
+		TO_NUMBER(SUBSTR(j.hitsuke_no, 12)) DESC
+
+	</select>
+
+
+
+
+	<insert id="insertJumunsho"
+		parameterType="org.zerock.domain.JumunshoVO" useGeneratedKeys="true"
+		keyProperty="no" keyColumn="No">
+		INSERT INTO Jumunsho (
+		JumunshoID, Hitsuke, No, referencetype, TorihikisakiID, TantoushaID,
+		SoukoID, Zeikomikubun, TsukaID, NoukiIchija, Memo, Status
+		) VALUES (
+		Jumunsho_seq.nextval,
+		#{hitsuke},
+		(SELECT COALESCE(MAX(No), 0) + 1
+		FROM Jumunsho
+		WHERE Hitsuke = #{hitsuke}),
+		2,
+		#{torihikisakiID},
+		#{tantoushaID},
+		#{soukoID},
+		#{zeikomikubun},
+		#{tsukaID},
+		#{noukiIchija},
+		#{memo},
+		'進行中'
+		)
+	</insert>
+
+
+	<insert id="insertCommonHinmoku"
+		parameterType="org.zerock.domain.CommonHinmokuVO">
+		INSERT INTO Common_Hinmoku (
+		CommonHinmokuID, ReferenceType, HINMOKUID, Hitsuke_No, ItemCode, ItemName, kikaku,
+		Suuryou, Tanka, KyoukyuKingaku, Bugase, Tekiyo, MIHANBAISUURYOU
+		) VALUES (
+		CommonHinmoku_seq.nextval, '2', #{hinmokuID} ,#{hitsukeNo}, #{itemCode}, #{itemName}, #{kikaku},
+		#{suuryou}, #{tanka}, #{kyoukyuKingaku}, #{bugase}, #{tekiyo},
+		#{suuryou}
+		)
+	</insert>
+
+	<select id="statusList" parameterType="map"
+		resultType="org.zerock.domain.OrderVO">
+		SELECT
+		j.hitsuke_no AS hitsukeNo,
+		j.Hitsuke_No_refertype,
+		h.itemname AS hinmokuMei,
+		h.suuryou AS suuryou,
+		h.tanka AS tanka,
+		h.kyoukyuKingaku AS kyoukyuKingaku,
+		t.TORIHIKISAKIMEI as torihikisakiMei,
+		h.tekiyo AS tekiyo,
+		h.kyoukyuKingaku / 10 AS bugase,
+		h.kyoukyuKingaku + h.kyoukyuKingaku / 10 AS goukei,
+		s.soukoMei AS soukoMei
+		FROM
+		jumunsho j
+		JOIN
+		common_hinmoku h ON j.Hitsuke_No_refertype = h.Hitsuke_No_refertype
+		LEFT JOIN
+		torihikisaki t ON j.TorihikisakiID = t.TorihikisakiID
+		LEFT JOIN
+		tantousha ts ON j.tantoushaID = ts.tantoushaID
+		LEFT JOIN
+		tsuuka tk ON j.tsukaID = tk.tsukaID
+		LEFT JOIN
+		souko s ON j.soukoID = s.soukoID
+		LEFT JOIN
+		project p ON j.projectID = p.projectID
+		WHERE
+		(#{nyuuryokuBiKaishi, jdbcType=DATE} IS NULL OR TO_DATE(SUBSTR(h.hitsuke_no, 1, 10), 'YYYY/MM/DD') &gt;= #{nyuuryokuBiKaishi,
+		jdbcType=DATE})
+		AND (#{nyuuryokuBiShuuryou, jdbcType=DATE} IS NULL OR TO_DATE(SUBSTR(h.hitsuke_no, 1, 10), 'YYYY/MM/DD') &lt;=
+		#{nyuuryokuBiShuuryou, jdbcType=DATE})
+		AND (#{tsukaID, jdbcType=INTEGER} IS NULL OR j.tsukaID = #{tsukaID,
+		jdbcType=INTEGER})
+		AND (#{soukoID, jdbcType=INTEGER} IS NULL OR j.soukoID = #{soukoID,
+		jdbcType=INTEGER})
+		AND (#{projectID, jdbcType=INTEGER} IS NULL OR j.projectID = #{projectID,
+		jdbcType=INTEGER})
+		AND (#{torihikisakiID, jdbcType=INTEGER} IS NULL OR j.torihikisakiID =
+		#{torihikisakiID, jdbcType=INTEGER})
+		AND (#{hinmokuMei, jdbcType=VARCHAR} IS NULL OR h.itemName =
+		#{hinmokuMei, jdbcType=VARCHAR})
+		AND (#{tantoushaID, jdbcType=INTEGER} IS NULL OR j.tantoushaID =
+		#{tantoushaID, jdbcType=INTEGER})
+		AND (#{zeikomikubun, jdbcType=VARCHAR} IS NULL OR j.ZEIKOMIKUBUN =
+		#{zeikomikubun, jdbcType=VARCHAR})
+		AND (#{noukiichija_kaishi, jdbcType=DATE} IS NULL OR j.NOUKIICHIJA &gt;=
+		#{noukiichija_kaishi, jdbcType=DATE})
+		AND (#{noukiichija_shuuryou, jdbcType=DATE} IS NULL OR j.NOUKIICHIJA
+		&lt;= #{noukiichija_shuuryou, jdbcType=DATE})
+		ORDER BY
+		TO_DATE(SUBSTR(j.hitsuke_no, 1, 10), 'YYYY/MM/DD') DESC, 
+    	TO_NUMBER(SUBSTR(j.hitsuke_no, 12)) DESC
+	</select>
+
+
+
+
+	<select id="getHinmokuList"
+		resultType="org.zerock.domain.HinmokuVO">
+		SELECT
+		HinmokuID,
+		ZaikoKoodo,
+		Hinmokumei,
+		Kikaku,
+		Tanka,
+		KyoukyuuGaku,
+		Shouhizei
+		FROM Hinmoku
+	</select>
+
+</mapper>
